@@ -14,7 +14,7 @@ from llm.client import LLMClient
 from executor.command_executor import CommandExecutor
 from safety.confirmation import ConfirmationHandler
 from safety.audit import AuditLogger
-from memory.database import Database
+from memory.database import MemoryDatabase
 from os_intelligence.registry_scanner import RegistryScanner
 from os_intelligence.app_analyzer import AppAnalyzer
 from os_intelligence.leftover_detector import LeftoverDetector
@@ -41,17 +41,14 @@ class PersonalAIAgent:
         self.executor = CommandExecutor()
         self.confirmation = ConfirmationHandler()
         self.audit = AuditLogger()
-        self.db = Database()
+        self.db = MemoryDatabase()
         
         # OS Intelligence
         self.registry_scanner = RegistryScanner()
         self.app_analyzer = AppAnalyzer()
         self.leftover_detector = LeftoverDetector()
         self.service_inspector = ServiceInspector()
-        self.uninstaller = SmartUninstaller(
-            self.registry_scanner,
-            self.leftover_detector
-        )
+        self.uninstaller = SmartUninstaller()
         
         # Advanced Safety
         self.backup_manager = BackupManager()
@@ -75,11 +72,8 @@ class PersonalAIAgent:
         """Initialize async components"""
         await self.db.initialize()
         
-        # Initialize preferences
-        await self.preferences.initialize()
-        
         # Apply saved preferences
-        self.dry_run_enabled = await self.preferences.get('dry_run_mode', False)
+        self.dry_run_enabled = self.preferences.get('dry_run_mode', False)
         
         print("✅ Personal AI Agent initialized (Phase 4: Learning & Memory)")
         print("=" * 60)
@@ -104,16 +98,16 @@ class PersonalAIAgent:
         
         # Show learning stats
         stats = self.pattern_learner.get_statistics()
-        if stats['total_commands'] > 0:
+        if stats['total_executions'] > 0:
             print(f"\n📚 Learning Stats:")
-            print(f"   Commands learned: {stats['total_commands']}")
-            print(f"   Unique patterns: {stats['unique_patterns']}")
+            print(f"   Commands learned: {stats['total_executions']}")
+            print(f"   Unique patterns: {stats['total_patterns']}")
             print(f"   Success rate: {stats['avg_success_rate']:.1%}")
         
         # Show preferences
-        verbose = await self.preferences.get('verbose_explanations', True)
-        learn = await self.preferences.get('learn_patterns', True)
-        suggestions = await self.preferences.get('smart_suggestions', True)
+        verbose = self.preferences.get('verbose_explanations', True)
+        learn = self.preferences.get('learn_patterns', True)
+        suggestions = self.preferences.get('smart_suggestions', True)
         
         print(f"\n⚙️  Active Features:")
         print(f"   Dry-run mode: {'ON' if self.dry_run_enabled else 'OFF'}")
@@ -135,13 +129,13 @@ class PersonalAIAgent:
         # Dry-run control
         if cmd_lower in ['dry-run on', 'dry run on', 'dryrun on', 'enable dry-run']:
             self.dry_run_enabled = True
-            await self.preferences.set('dry_run_mode', True)
+            self.preferences.set('dry_run_mode', True)
             print("✅ Dry-run mode enabled - commands will be simulated")
             return True
         
         if cmd_lower in ['dry-run off', 'dry run off', 'dryrun off', 'disable dry-run']:
             self.dry_run_enabled = False
-            await self.preferences.set('dry_run_mode', False)
+            self.preferences.set('dry_run_mode', False)
             print("✅ Dry-run mode disabled - commands will execute normally")
             return True
         
@@ -269,8 +263,8 @@ class PersonalAIAgent:
         stats = self.pattern_learner.get_statistics()
         
         print("\n📊 Learning Statistics\n")
-        print(f"Total commands executed: {stats['total_commands']}")
-        print(f"Unique command patterns: {stats['unique_patterns']}")
+        print(f"Total commands executed: {stats['total_executions']}")
+        print(f"Unique command patterns: {stats['total_patterns']}")
         print(f"Average success rate: {stats['avg_success_rate']:.1%}")
         print(f"Most active context: {stats['most_active_context']}")
         print()
@@ -302,13 +296,13 @@ class PersonalAIAgent:
         """Show and allow editing settings"""
         print("\n⚙️  User Preferences\n")
         
-        categories = await self.preferences.get_categories()
+        categories = self.preferences.get_categories()
         for category in categories:
-            prefs = await self.preferences.get_by_category(category)
+            prefs = self.preferences.get_by_category(category)
             if prefs:
                 print(f"{category.upper()}:")
-                for pref in prefs:
-                    print(f"   {pref.key}: {pref.value}")
+                for key, value in prefs.items():
+                    print(f"   {key}: {value}")
                 print()
         
         print("💡 To change a setting, type: set <key> <value>")
@@ -376,7 +370,7 @@ class PersonalAIAgent:
         context = self.context_manager.infer_context(user_input, self.command_history)
         
         # Check if smart suggestions are enabled
-        suggestions_enabled = await self.preferences.get('smart_suggestions', True)
+        suggestions_enabled = self.preferences.get('smart_suggestions', True)
         
         # Show suggestions if enabled
         if suggestions_enabled and self.command_history:
@@ -385,7 +379,7 @@ class PersonalAIAgent:
                 print(f"\n💡 Suggestion: {predictions[0][0]} (confidence: {predictions[0][1]:.0%})")
         
         # Generate command
-        verbose = await self.preferences.get('verbose_explanations', True)
+        verbose = self.preferences.get('verbose_explanations', True)
         
         print(f"\n🤖 Generating command for: {user_input}")
         command = await self.llm.generate_command(user_input)
@@ -413,7 +407,7 @@ class PersonalAIAgent:
                 print(f"   • {warning}")
         
         # Confirmation (if required)
-        confirmation_required = await self.preferences.get('confirmation_required', True)
+        confirmation_required = self.preferences.get('confirmation_required', True)
         
         if confirmation_required:
             confirmed = await self.confirmation.confirm_command(command)
@@ -423,7 +417,7 @@ class PersonalAIAgent:
                 return
         
         # Backup (if enabled and command is risky)
-        auto_backup = await self.preferences.get('auto_backup', True)
+        auto_backup = self.preferences.get('auto_backup', True)
         if auto_backup and not is_safe:
             print("\n💾 Creating safety backup...")
             backup_id = self.backup_manager.create_backup(f"Pre-execution: {user_input[:50]}")
@@ -461,7 +455,7 @@ class PersonalAIAgent:
             await self.audit.log_execution(user_input, command, result)
             
             # Learn from execution (if enabled)
-            learn_patterns = await self.preferences.get('learn_patterns', True)
+            learn_patterns = self.preferences.get('learn_patterns', True)
             if learn_patterns:
                 self.pattern_learner.record_command(
                     command,

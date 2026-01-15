@@ -265,7 +265,8 @@ class PatternLearner:
                 'total_patterns': 0,
                 'total_executions': 0,
                 'avg_success_rate': 0.0,
-                'most_common': None
+                'most_common': None,
+                'most_active_context': 'general'
             }
         
         total_executions = sum(p.frequency for p in self.patterns.values())
@@ -276,9 +277,18 @@ class PatternLearner:
         
         most_common = max(self.patterns.values(), key=lambda p: p.frequency)
         
+        # Find most active context
+        context_counts = {}
+        for pattern in self.patterns.values():
+            for ctx in pattern.contexts:
+                context_counts[ctx] = context_counts.get(ctx, 0) + pattern.frequency
+        
+        most_active_context = max(context_counts.items(), key=lambda x: x[1])[0] if context_counts else 'general'
+        
         return {
             'total_patterns': len(self.patterns),
             'total_executions': total_executions,
             'avg_success_rate': avg_success_rate,
-            'most_common': most_common.command_template
+            'most_common': most_common.command_template,
+            'most_active_context': most_active_context
         }

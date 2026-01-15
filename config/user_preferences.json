@@ -1,0 +1,56 @@
+{
+  "auto_backup": {
+    "key": "auto_backup",
+    "value": true,
+    "category": "safety",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "dry_run_mode": {
+    "key": "dry_run_mode",
+    "value": false,
+    "category": "safety",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "confirmation_required": {
+    "key": "confirmation_required",
+    "value": true,
+    "category": "safety",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "verbose_explanations": {
+    "key": "verbose_explanations",
+    "value": true,
+    "category": "ui",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "color_output": {
+    "key": "color_output",
+    "value": true,
+    "category": "ui",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "save_command_history": {
+    "key": "save_command_history",
+    "value": true,
+    "category": "memory",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "learn_patterns": {
+    "key": "learn_patterns",
+    "value": true,
+    "category": "memory",
+    "last_updated": "2026-01-16T00:15:06.075279"
+  },
+  "smart_suggestions": {
+    "key": "smart_suggestions",
+    "value": true,
+    "category": "memory",
+    "last_updated": "2026-01-16T00:15:06.076261"
+  },
+  "max_history_size": {
+    "key": "max_history_size",
+    "value": 1000,
+    "category": "memory",
+    "last_updated": "2026-01-16T00:15:06.076261"
+  }
+}
