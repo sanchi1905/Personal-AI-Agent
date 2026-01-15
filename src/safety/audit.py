@@ -40,6 +40,22 @@ class AuditLogger:
         }
         self._write_entry(entry)
     
+    def log_cancellation(self, user_request: str, command: str):
+        """
+        Log a cancelled command
+        
+        Args:
+            user_request: Original user request
+            command: Command that was cancelled
+        """
+        entry = {
+            "event": "command_cancelled",
+            "timestamp": datetime.now().isoformat(),
+            "user_request": user_request,
+            "command": command
+        }
+        self._write_entry(entry)
+    
     def log_command_generation(self, request: str, command: Dict[str, Any]):
         """
         Log command generation
@@ -75,19 +91,29 @@ class AuditLogger:
         }
         self._write_entry(entry)
     
-    def log_execution(self, command: str, result: Dict[str, Any]):
+    def log_execution(self, user_request: str, command: str, result: Any):
         """
         Log command execution and result
         
         Args:
+            user_request: Original user request
             command: Executed command
             result: Execution result
         """
+        # Handle both dict and ExecutionResult objects
+        result_data = result if isinstance(result, dict) else {
+            "success": getattr(result, 'success', False),
+            "stdout": getattr(result, 'stdout', ''),
+            "stderr": getattr(result, 'stderr', ''),
+            "exit_code": getattr(result, 'exit_code', -1)
+        }
+        
         entry = {
             "event": "command_executed",
             "timestamp": datetime.now().isoformat(),
+            "user_request": user_request,
             "command": command,
-            "result": result
+            "result": result_data
         }
         self._write_entry(entry)
     

@@ -125,3 +125,12 @@ class LLMClient:
             return True
         except Exception:
             return False
+    
+    async def check_connection(self) -> bool:
+        """
+        Check connection to Ollama server (async wrapper)
+        
+        Returns:
+            True if connected
+        """
+        return self.is_available()
