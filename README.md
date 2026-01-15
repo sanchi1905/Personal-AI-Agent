@@ -42,8 +42,11 @@ ollama pull llama3
 # Phase 1 & 2: Basic features + OS Intelligence
 python cli_enhanced.py
 
-# Phase 3: Full safety features (recommended)
+# Phase 3: Full safety features
 python cli_phase3.py
+
+# Phase 4: Learning & Memory (recommended)
+python cli_phase4.py
 ```
 
 ## 📁 Project Structure
@@ -57,11 +60,15 @@ personal-ai-agent/
 │   ├── safety_advanced/     # Phase 3: Backups, rollback, dry-run
 │   ├── os_intelligence/     # Phase 2: Registry, services, uninstaller
 │   ├── memory/              # System memory store
+│   ├── memory_advanced/     # Phase 4: Learning, preferences, suggestions
 │   └── api/                 # FastAPI routes
 ├── tests/                   # Unit and integration tests
 ├── logs/                    # Execution logs
 ├── backups/                 # Automatic backups before operations
-├── rollback_scripts/        # Generated rollback PowerShell scripts
+├── ronfig/                  # User preferences and settings
+├── memory/                  # Learned patterns and command history
+├── cli_phase3.py           # Phase 3 CLI
+├── cli_phase4.py           # Phase 4ted rollback PowerShell scripts
 ├── cli_phase3.py           # Phase 3 CLI (recommended)
 ### Phase 1 & 2 (Basic Safety)
 - ✅ No silent execution
@@ -70,7 +77,7 @@ personal-ai-agent/
 - ✅ Command preview before execution
 - ✅ Dangerous command detection
 
-### Phase 3 (Advanced Safety) ⭐ NEW
+### Phase 3 (Advanced Safety)
 - ✅ **Automatic backups** before destructive operations
 - ✅ **Rollback scripts** generated for all changes
 - ✅ **Dry-run mode** - test commands without executing
@@ -78,9 +85,57 @@ personal-ai-agent/
 - ✅ **Command sandbox** - protects critical system paths
 - ✅ **Windows restore points** integration
 
+### Phase 4 (Learning & Memory) ⭐ NEW
+- ✅ **User preferences** - Personalized settings and configurations
+- ✅ **Pattern learning** - Learns from your command usage
+- ✅ **Smart suggestions** - Context-aware command recommendations
+- ✅ **System context awareness** - Tracks system health and state
+- ✅ **Command prediction** - Predicts next likely commands
+- ✅ **Performance optimization** - Suggests command improvements
+- ✅ **Personalized shortcuts** - Auto-generates shortcuts for frequent commands
+
 ## 🎮 Usage Examples
 
-### Phase 3 CLI Commands
+### Phase 4 CLI Commands
+
+```bash
+# Natural language - just ask!
+> list running processes
+> show disk space
+> what services are running?
+
+# System intelligence
+list apps              # Show installed applications
+list services          # Show Windows services
+
+# Safety features
+dry-run on             # Enable simulation mode
+backups                # View all backups
+changes                # Show recent system changes
+
+# Learning & Memory (NEW!)
+suggestions            # Get smart command recommendations
+stats                  # View learning statistics
+settings               # Configure preferences
+context                # Show system health & context
+
+# Example: Learning in action
+> list apps
+✅ Command executed and learned
+
+> suggestions
+💡 Based on your history, you might want to:
+   • Get-Service | Where-Object {$_.Status -eq "Running"}
+   • Get-Process | Sort-Object CPU -Descending
+
+> stats
+📊 Learning Statistics:
+   Commands learned: 15
+   Success rate: 93%
+   Most used: list apps (5 times)
+```
+
+### Phase 3 CLI Commands (Still Available)
 
 ```bash
 # Toggle dry-run mode (test without executing)
