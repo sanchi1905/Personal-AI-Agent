@@ -229,11 +229,128 @@ Native Windows integration:
 - System-level rollback capability
 - Requires admin privileges
 
+## 🧠 LLM & AI Architecture
+
+### Model Selection Strategy
+
+This agent uses a **hybrid local + cloud approach** for optimal performance:
+
+**Primary Reasoning (Recommended):**
+- **Local:** Ollama + LLaMA 3 - Privacy-focused, offline capable, no API costs
+- **Cloud:** GPT-4.1 / GPT-4o - Superior reasoning for complex operations
+- **Strategy:** Start with local, escalate to cloud for complex tasks
+
+**Safety Validation:**
+- Dedicated safety layer validates all commands
+- Checks dangerous patterns, protected paths, privilege requirements
+- Independent from primary reasoning model
+
+**Planning Engine:**
+- Code-capable models (GPT-4.1 or LLaMA 3 Code)
+- Transforms intent → structured execution plans
+- Predicts changes and estimates risks
+
+**Memory & Learning:**
+- Vector embeddings for command similarity
+- Pattern recognition across usage history
+- Personalized suggestion engine
+
+### Decision Orchestration Pipeline
+
+Every operation flows through explicit validation stages:
+
+```
+User Intent
+    ↓
+Intent Extraction (LLM)
+    ↓
+Safety Validation (filters dangerous patterns)
+    ↓
+Privilege Check (admin requirements)
+    ↓
+Command Planning (generate execution plan)
+    ↓
+User Confirmation (explicit approval required)
+    ↓
+Backup Creation (if destructive)
+    ↓
+Execution (with failure classification)
+    ↓
+Audit Logging (complete trail)
+```
+
+**Key Safety Layers:**
+
+1. **LLM Safety Contract**
+   - No malicious command generation
+   - Clear warnings for high-risk operations
+   - Alternative suggestion for dangerous requests
+   - Educational responses for harmful intent
+
+2. **Validation Layer**
+   - Sandboxing protects critical paths
+   - Pattern matching for dangerous commands
+   - Privilege verification before execution
+   - Degraded mode when permissions insufficient
+
+3. **Human-in-the-Loop**
+   - No silent execution ever
+   - Preview all commands before running
+   - Explicit approval required
+   - Dry-run mode for testing
+
+### Privacy & Data Handling
+
+**Local Mode (Ollama):**
+- ✅ Complete privacy - all processing on-device
+- ✅ Works offline
+- ✅ No external data transmission
+- ✅ No API costs
+
+**Cloud Mode (OpenAI/Azure):**
+- ⚠️ Commands sent to API for processing
+- ⚠️ Review provider's data usage policy
+- ✅ Consider Azure OpenAI for enterprise compliance
+- ✅ Option to opt-out of training data usage
+
+**Recommendation:** Use local models (Ollama) for sensitive environments, cloud models for maximum capability.
+
+### Abuse Prevention
+
+**What prevents misuse?**
+- Local-only execution (no remote command injection)
+- User confirmation required for all operations
+- Comprehensive audit logging
+- Command sandboxing and validation
+- Privilege checks prevent unauthorized escalation
+- No autonomous background operations
+
+See [docs/SECURITY.md](docs/SECURITY.md) for detailed threat model.
+
+## 🚫 Scope & Limitations
+
+**What this agent will NEVER do:**
+- Modify kernel/firmware/bootloader
+- Execute commands silently without approval
+- Enable remote access/control
+- Mine cryptocurrency or hijack resources
+- Exfiltrate data to external servers
+- Bypass security controls
+- Delete audit logs
+
+See [docs/SCOPE_BOUNDARIES.md](docs/SCOPE_BOUNDARIES.md) for complete list.
+
 - ✅ No silent execution
 - ✅ Full audit trail
 - ✅ User confirmation required
 - ✅ Command preview before execution
 - ✅ Rollback support
+
+## 📚 Documentation
+
+- [Security & Threat Model](docs/SECURITY.md)
+- [Scope Boundaries & Non-Goals](docs/SCOPE_BOUNDARIES.md)
+- [Phase 5 UI README](ui/README.md)
 
 ## 📝 License
 
