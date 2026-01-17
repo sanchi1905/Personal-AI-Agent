@@ -45,8 +45,19 @@ python cli_enhanced.py
 # Phase 3: Full safety features
 python cli_phase3.py
 
-# Phase 4: Learning & Memory (recommended)
+# Phase 4: Learning & Memory
 python cli_phase4.py
+
+# Phase 5: Desktop UI (recommended) 🎨
+# Terminal 1 - Backend API:
+python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Terminal 2 - Frontend UI:
+cd ui
+npm install
+npm run dev
+
+# Open browser to http://localhost:3000
 ```
 
 ## 📁 Project Structure
@@ -61,7 +72,11 @@ personal-ai-agent/
 │   ├── os_intelligence/     # Phase 2: Registry, services, uninstaller
 │   ├── memory/              # System memory store
 │   ├── memory_advanced/     # Phase 4: Learning, preferences, suggestions
-│   └── api/                 # FastAPI routes
+│   └── api/                 # Phase 5: FastAPI backend for UI
+├── ui/                      # Phase 5: React Desktop UI
+│   ├── src/components/      # React components
+│   ├── src/services/        # API client
+│   └── src/hooks/           # Custom hooks
 ├── tests/                   # Unit and integration tests
 ├── logs/                    # Execution logs
 ├── backups/                 # Automatic backups before operations
@@ -85,7 +100,7 @@ personal-ai-agent/
 - ✅ **Command sandbox** - protects critical system paths
 - ✅ **Windows restore points** integration
 
-### Phase 4 (Learning & Memory) ⭐ NEW
+### Phase 4 (Learning & Memory)
 - ✅ **User preferences** - Personalized settings and configurations
 - ✅ **Pattern learning** - Learns from your command usage
 - ✅ **Smart suggestions** - Context-aware command recommendations
@@ -93,6 +108,15 @@ personal-ai-agent/
 - ✅ **Command prediction** - Predicts next likely commands
 - ✅ **Performance optimization** - Suggests command improvements
 - ✅ **Personalized shortcuts** - Auto-generates shortcuts for frequent commands
+
+### Phase 5 (Desktop UI) ⭐ NEW
+- ✅ **ChatGPT-like interface** - Modern conversational UI
+- ✅ **Real-time system monitoring** - Live CPU, memory, disk stats
+- ✅ **Visual command preview** - See commands before execution
+- ✅ **Interactive confirmations** - Beautiful approve/deny dialogs
+- ✅ **WebSocket updates** - Real-time status and execution feedback
+- ✅ **Professional design** - Dark mode, responsive, accessible
+- ✅ **Complete integration** - All Phase 1-4 features in one UI
 
 ## 🎮 Usage Examples
 
