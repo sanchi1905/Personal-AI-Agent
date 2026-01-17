@@ -80,11 +80,10 @@ personal-ai-agent/
 ├── tests/                   # Unit and integration tests
 ├── logs/                    # Execution logs
 ├── backups/                 # Automatic backups before operations
-├── ronfig/                  # User preferences and settings
+├── config/                  # User preferences and settings
 ├── memory/                  # Learned patterns and command history
-├── cli_phase3.py           # Phase 3 CLI
-├── cli_phase4.py           # Phase 4ted rollback PowerShell scripts
-├── cli_phase3.py           # Phase 3 CLI (recommended)
+├── cli_phase3.py           # Phase 3 CLI with advanced safety
+├── cli_phase4.py           # Phase 4 CLI with learning & memory
 ### Phase 1 & 2 (Basic Safety)
 - ✅ No silent execution
 - ✅ Full audit trail
@@ -228,7 +227,7 @@ Native Windows integration:
 - Create restore points before major operations
 - List all available restore points
 - System-level rollback capability
-- Requires admin privilegestees
+- Requires admin privileges
 
 - ✅ No silent execution
 - ✅ Full audit trail
