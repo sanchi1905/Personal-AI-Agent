@@ -76,7 +76,11 @@ class AgentInstance:
         self.context_manager = SystemContextManager()
         
         # Voice Integration
-        self.voice_service = ElevenLabsVoiceService()
+        try:
+            self.voice_service = ElevenLabsVoiceService()
+        except Exception as e:
+            logger.warning(f"Voice service initialization failed: {e}")
+            self.voice_service = None
         
         self.command_history = []
         self.initialized = False
@@ -426,6 +430,8 @@ async def update_preference(key: str, value: Any):
 # Voice API Routes
 
 class VoiceRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     text: str
     voice_id: Optional[str] = None
     model_id: Optional[str] = "eleven_monolingual_v1"
@@ -441,6 +447,9 @@ async def text_to_speech(request: VoiceRequest):
         from fastapi.responses import StreamingResponse
         import io
         
+        if not agent.voice_service:
+            raise HTTPException(status_code=503, detail="Voice service not available")
+        
         # Generate speech
         audio_bytes = await asyncio.to_thread(
             agent.voice_service.text_to_speech,
@@ -451,6 +460,9 @@ async def text_to_speech(request: VoiceRequest):
             similarity_boost=request.similarity_boost
         )
         
+        if not audio_bytes:
+            raise HTTPException(status_code=500, detail="Failed to generate speech")
+        
         # Return audio stream
         return StreamingResponse(
             io.BytesIO(audio_bytes),
@@ -459,6 +471,8 @@ async def text_to_speech(request: VoiceRequest):
                 "Content-Disposition": "inline; filename=speech.mp3"
             }
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"TTS error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -469,8 +483,17 @@ async def get_voices():
     Get available ElevenLabs voices
     """
     try:
+        if not agent.voice_service:
+            raise HTTPException(status_code=503, detail="Voice service not available")
+            
         voices = await asyncio.to_thread(agent.voice_service.get_available_voices)
+        
+        if not voices:
+            raise HTTPException(status_code=500, detail="Failed to fetch voices")
+            
         return {"voices": voices}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Get voices error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
