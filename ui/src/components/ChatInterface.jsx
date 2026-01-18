@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
+import { PaperAirplaneIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/solid'
 import api from '../services/api'
+import voiceService from '../services/voiceService'
+import VoiceInput from './VoiceInput'
 
 export default function ChatInterface({ onCommandGenerated, onShowConfirmation }) {
   const [messages, setMessages] = useState([
@@ -13,6 +15,8 @@ export default function ChatInterface({ onCommandGenerated, onShowConfirmation }
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -54,6 +58,11 @@ export default function ChatInterface({ onCommandGenerated, onShowConfirmation }
 
         setMessages(prev => [...prev, commandMessage])
         
+        // Speak response if voice enabled
+        if (voiceEnabled && response.explanation) {
+          speakMessage(response.explanation);
+        }
+        
         // Pass command to parent
         onCommandGenerated(response)
       } else {
@@ -83,6 +92,45 @@ export default function ChatInterface({ onCommandGenerated, onShowConfirmation }
       handleSend()
     }
   }
+
+  const speakMessage = async (text) => {
+    if (isSpeaking) {
+      voiceService.stopSpeaking();
+      setIsSpeaking(false);
+      return;
+    }
+
+    try {
+      setIsSpeaking(true);
+      await voiceService.speak(text);
+      setIsSpeaking(false);
+    } catch (error) {
+      console.error('Speech error:', error);
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleVoiceInput = (transcript) => {
+    setInput(transcript);
+  };
+
+  const handleVoiceFinal = (transcript) => {
+    setInput(transcript);
+    // Auto-send after voice input
+    setTimeout(() => {
+      if (transcript.trim()) {
+        handleSend();
+      }
+    }, 300);
+  };
+
+  const toggleVoice = () => {
+    if (isSpeaking) {
+      voiceService.stopSpeaking();
+      setIsSpeaking(false);
+    }
+    setVoiceEnabled(!voiceEnabled);
+  };
 
   return (
     <div className="flex flex-col h-full bg-slate-900">
@@ -178,23 +226,49 @@ export default function ChatInterface({ onCommandGenerated, onShowConfirmation }
 
       {/* Input Area */}
       <div className="border-t border-slate-700 bg-slate-800 px-6 py-4">
+        <div className="flex items-center space-x-2 mb-2">
+          <button
+            onClick={toggleVoice}
+            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+              voiceEnabled
+                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+            }`}
+            title={voiceEnabled ? 'Voice responses enabled' : 'Voice responses disabled'}
+          >
+            {voiceEnabled ? (
+              <><SpeakerWaveIcon className="w-4 h-4 inline mr-1" />Voice On</>
+            ) : (
+              <><SpeakerXMarkIcon className="w-4 h-4 inline mr-1" />Voice Off</>
+            )}
+          </button>
+          {isSpeaking && (
+            <span className="text-xs text-green-400 animate-pulse">Speaking...</span>
+          )}
+        </div>
         <div className="flex items-end space-x-3">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about your system..."
+            placeholder="Ask me anything about your system... (or use voice input)"
             disabled={isLoading}
             className="flex-1 bg-slate-900 text-white border border-slate-700 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             rows="3"
           />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white p-3 rounded-lg transition-colors disabled:cursor-not-allowed"
-          >
-            <PaperAirplaneIcon className="w-5 h-5" />
-          </button>
+          <div className="flex flex-col space-y-2">
+            <VoiceInput
+              onTranscript={handleVoiceInput}
+              onFinalTranscript={handleVoiceFinal}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white p-3 rounded-lg transition-colors disabled:cursor-not-allowed"
+            >
+              <PaperAirplaneIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

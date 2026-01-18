@@ -33,6 +33,7 @@ from src.memory_advanced.user_preferences import UserPreferences
 from src.memory_advanced.pattern_learner import PatternLearner
 from src.memory_advanced.smart_suggester import SmartSuggester
 from src.memory_advanced.context_manager import SystemContextManager
+from src.services.voice_service import ElevenLabsVoiceService
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,9 @@ class AgentInstance:
         self.pattern_learner = PatternLearner()
         self.suggester = SmartSuggester(self.pattern_learner, self.preferences)
         self.context_manager = SystemContextManager()
+        
+        # Voice Integration
+        self.voice_service = ElevenLabsVoiceService()
         
         self.command_history = []
         self.initialized = False
@@ -417,6 +421,58 @@ async def update_preference(key: str, value: Any):
         return {"success": True, "key": key, "value": value}
     except Exception as e:
         logger.error(f"Update preference error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Voice API Routes
+
+class VoiceRequest(BaseModel):
+    text: str
+    voice_id: Optional[str] = None
+    model_id: Optional[str] = "eleven_monolingual_v1"
+    stability: Optional[float] = 0.5
+    similarity_boost: Optional[float] = 0.75
+
+@app.post("/api/voice/tts")
+async def text_to_speech(request: VoiceRequest):
+    """
+    Convert text to speech using ElevenLabs
+    """
+    try:
+        from fastapi.responses import StreamingResponse
+        import io
+        
+        # Generate speech
+        audio_bytes = await asyncio.to_thread(
+            agent.voice_service.text_to_speech,
+            request.text,
+            voice_id=request.voice_id,
+            model_id=request.model_id,
+            stability=request.stability,
+            similarity_boost=request.similarity_boost
+        )
+        
+        # Return audio stream
+        return StreamingResponse(
+            io.BytesIO(audio_bytes),
+            media_type="audio/mpeg",
+            headers={
+                "Content-Disposition": "inline; filename=speech.mp3"
+            }
+        )
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/voice/voices")
+async def get_voices():
+    """
+    Get available ElevenLabs voices
+    """
+    try:
+        voices = await asyncio.to_thread(agent.voice_service.get_available_voices)
+        return {"voices": voices}
+    except Exception as e:
+        logger.error(f"Get voices error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws")

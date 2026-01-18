@@ -340,6 +340,67 @@ See [docs/SECURITY.md](docs/SECURITY.md) for detailed threat model.
 
 See [docs/SCOPE_BOUNDARIES.md](docs/SCOPE_BOUNDARIES.md) for complete list.
 
+## 🎙️ Phase 6: Voice Integration
+
+**ElevenLabs Voice Control** - Hands-free system management with natural voice commands
+
+### Features
+- **Voice Input**: Speak commands naturally using your microphone
+- **Voice Output**: Agent responses read aloud with high-quality TTS
+- **Real-time Transcription**: See what you're saying as you speak
+- **Voice Toggle**: Easily enable/disable voice responses
+- **Multiple Voice Options**: Choose from various AI voices
+
+### Setup
+
+1. **Get ElevenLabs API Key**:
+   - Sign up at [ElevenLabs](https://elevenlabs.io/)
+   - Navigate to Profile → API Keys
+   - Copy your API key
+
+2. **Configure Environment**:
+   ```bash
+   # Add to your .env file:
+   ELEVENLABS_API_KEY=your_api_key_here
+   ELEVENLABS_VOICE_ID=EXAVITQu4vr4xnSDxMaL  # Sarah voice (default)
+   ```
+
+3. **Choose Your Voice** (optional):
+   - Visit [ElevenLabs Voice Library](https://elevenlabs.io/voice-library)
+   - Find a voice you like
+   - Copy the Voice ID and update `ELEVENLABS_VOICE_ID` in `.env`
+
+### Usage
+
+1. Start the application (backend + frontend)
+2. Click the **microphone button** in the chat interface
+3. Speak your command (e.g., "Show me disk usage")
+4. Agent will transcribe, execute, and speak the response
+5. Toggle voice responses on/off with the **speaker button**
+
+### Browser Requirements
+- Chrome/Edge/Opera (recommended) - Best Web Speech API support
+- Firefox - Partial support
+- Safari - Limited support
+
+### Troubleshooting
+
+**"Microphone not working"**
+- Check browser permissions (click lock icon in address bar)
+- Grant microphone access when prompted
+- Ensure microphone is not muted/disabled
+
+**"Voice responses not playing"**
+- Verify ELEVENLABS_API_KEY is set in .env
+- Check browser console for errors
+- Try the browser fallback TTS (doesn't require API key)
+
+**"Transcription is inaccurate"**
+- Speak clearly and at moderate pace
+- Reduce background noise
+- Use a quality microphone
+- Check browser's speech recognition language settings
+
 - ✅ No silent execution
 - ✅ Full audit trail
 - ✅ User confirmation required
