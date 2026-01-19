@@ -10,6 +10,10 @@ import asyncio
 import json
 from datetime import datetime
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import agent modules
 import sys
