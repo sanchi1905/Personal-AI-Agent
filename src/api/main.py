@@ -91,8 +91,14 @@ class AgentInstance:
     
     async def initialize(self):
         if not self.initialized:
-            await self.db.initialize()
-            self.initialized = True
+            try:
+                await self.db.initialize()
+                self.initialized = True
+                logger.info("Agent database initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize database: {e}")
+                # Continue without database
+                self.initialized = True
 
 agent = AgentInstance()
 
@@ -150,8 +156,12 @@ class SystemStatus(BaseModel):
 @app.on_event("startup")
 async def startup():
     """Initialize agent on startup"""
-    await agent.initialize()
-    logger.info("Personal AI Agent API started")
+    try:
+        await agent.initialize()
+        logger.info("Personal AI Agent API started successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize agent: {e}")
+        logger.warning("Agent running with limited functionality")
 
 @app.get("/")
 async def root():
