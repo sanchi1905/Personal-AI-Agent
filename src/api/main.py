@@ -342,8 +342,15 @@ async def get_system_status() -> SystemStatus:
             recommendations=recommendations
         )
     except Exception as e:
-        logger.error(f"System status error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"System status error: {e}", exc_info=True)
+        # Return safe defaults if status check fails
+        return SystemStatus(
+            cpu_percent=0.0,
+            memory_percent=0.0,
+            disk_percent=0.0,
+            health_status="unknown",
+            recommendations=[]
+        )
 
 @app.get("/api/apps")
 async def get_installed_apps():
@@ -531,17 +538,23 @@ async def websocket_endpoint(websocket: WebSocket):
             # Keep connection alive and send periodic system updates
             await asyncio.sleep(5)
             
-            # Send system status update
-            health = agent.context_manager.get_system_health()
-            await websocket.send_json({
-                "type": "system_update",
-                "data": {
-                    "cpu": health['cpu']['percent'],
-                    "memory": health['memory']['percent'],
-                    "disk": health['disk']['percent'],
-                    "status": health['overall_status']
-                }
-            })
+            try:
+                # Send system status update
+                health = agent.context_manager.get_system_health()
+                await websocket.send_json({
+                    "type": "system_update",
+                    "data": {
+                        "cpu": health['cpu']['percent'],
+                        "memory": health['memory']['percent'],
+                        "disk": health['disk']['percent'],
+                        "status": health['overall_status']
+                    }
+                })
+            except Exception as e:
+                logger.warning(f"Failed to send system update: {e}")
+                # Continue even if system update fails
+                pass
+                
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
