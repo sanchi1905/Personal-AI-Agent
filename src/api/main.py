@@ -47,7 +47,14 @@ app = FastAPI(title="Personal AI Agent API", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -209,7 +216,9 @@ async def chat(message: ChatMessage) -> Dict[str, Any]:
             requires_admin = False
         
         # Safety validation
-        is_safe, warnings = agent.sandbox.validate_command(cmd_text)
+        validation_result = agent.sandbox.validate_command(cmd_text)
+        is_safe = validation_result.get('allowed', True)
+        warnings = [validation_result.get('reason', '')] if not is_safe else []
         
         # Get optimization suggestions
         optimizations = agent.suggester.suggest_optimizations(cmd_text)
@@ -264,7 +273,8 @@ async def execute_command(request: CommandRequest) -> Dict[str, Any]:
             backup_id = None
             
             if auto_backup:
-                is_safe, _ = agent.sandbox.validate_command(request.command)
+                validation_result = agent.sandbox.validate_command(request.command)
+                is_safe = validation_result.get('allowed', True)
                 if not is_safe:
                     backup_id = agent.backup_manager.create_backup(f"Pre-execution: {request.command[:50]}")
             

@@ -5,6 +5,8 @@ LLM Client - Manages communication with Ollama
 import ollama
 from typing import Dict, Any, Optional
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ class LLMClient:
         self.model = model
         self.host = host
         self.client = ollama.Client(host=host)
+        self.executor = ThreadPoolExecutor(max_workers=4)
         
     async def chat(self, user_message: str, system_prompt: Optional[str] = None) -> str:
         """
@@ -49,9 +52,14 @@ class LLMClient:
                 "content": user_message
             })
             
-            response = self.client.chat(
-                model=self.model,
-                messages=messages
+            # Run synchronous Ollama call in thread pool
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                self.executor,
+                lambda: self.client.chat(
+                    model=self.model,
+                    messages=messages
+                )
             )
             
             return response['message']['content']
@@ -123,7 +131,8 @@ class LLMClient:
         try:
             self.client.list()
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Ollama not available: {e}")
             return False
     
     async def check_connection(self) -> bool:
@@ -133,4 +142,5 @@ class LLMClient:
         Returns:
             True if connected
         """
-        return self.is_available()
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(self.executor, self.is_available)
