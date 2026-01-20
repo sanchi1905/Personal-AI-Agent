@@ -6,12 +6,17 @@ export default function ConfirmationModal({ command, onConfirm, onCancel }) {
   const [executing, setExecuting] = useState(false)
   const [result, setResult] = useState(null)
 
+  console.log('[ConfirmationModal] Rendered with command:', command)
+
   const handleExecute = async (dryRun = false) => {
+    console.log('[ConfirmationModal] handleExecute called, dryRun:', dryRun)
     setExecuting(true)
     setResult(null)
 
     try {
+      console.log('[ConfirmationModal] Calling onConfirm...')
       const execResult = await onConfirm(dryRun)
+      console.log('[ConfirmationModal] Execution result:', execResult)
       setResult(execResult)
       
       if (!dryRun && execResult.success) {
@@ -21,6 +26,7 @@ export default function ConfirmationModal({ command, onConfirm, onCancel }) {
         }, 2000)
       }
     } catch (error) {
+      console.error('[ConfirmationModal] Execution error:', error)
       setResult({
         success: false,
         error: error.message

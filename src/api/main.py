@@ -303,12 +303,18 @@ async def execute_command(request: CommandRequest) -> Dict[str, Any]:
             # Add to history
             agent.command_history.append(request.command)
             
+            # Format output - combine stdout and stderr
+            output_text = result.stdout or ""
+            if result.stderr:
+                output_text += f"\n\n[Errors/Warnings]\n{result.stderr}"
+            
             response = {
                 "success": result.success,
                 "dry_run": False,
-                "output": result.output,
+                "output": output_text.strip() or "Command completed with no output",
                 "execution_time": result.execution_time,
-                "backup_id": backup_id
+                "backup_id": backup_id,
+                "return_code": result.return_code
             }
         
         # Broadcast execution complete
@@ -535,25 +541,16 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            # Keep connection alive and send periodic system updates
-            await asyncio.sleep(5)
+            # Just keep connection alive without sending updates
+            # This prevents crashes from get_system_health() calls
+            await asyncio.sleep(30)
             
+            # Send minimal heartbeat
             try:
-                # Send system status update
-                health = agent.context_manager.get_system_health()
-                await websocket.send_json({
-                    "type": "system_update",
-                    "data": {
-                        "cpu": health['cpu']['percent'],
-                        "memory": health['memory']['percent'],
-                        "disk": health['disk']['percent'],
-                        "status": health['overall_status']
-                    }
-                })
+                await websocket.send_json({"type": "heartbeat", "timestamp": datetime.now().isoformat()})
             except Exception as e:
-                logger.warning(f"Failed to send system update: {e}")
-                # Continue even if system update fails
-                pass
+                logger.warning(f"Heartbeat failed: {e}")
+                break
                 
     except WebSocketDisconnect:
         manager.disconnect(websocket)

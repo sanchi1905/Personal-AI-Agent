@@ -35,7 +35,11 @@ export default function VoiceInput({ onTranscript, onFinalTranscript }) {
       (err) => {
         setIsListening(false);
         setInterimTranscript('');
-        setError(err.message || 'Voice recognition failed');
+        const errorMsg = err?.message || err || 'Voice recognition failed';
+        setError(errorMsg);
+        console.error('Voice input error:', err);
+        // Auto-clear error after 5 seconds
+        setTimeout(() => setError(null), 5000);
       }
     );
   };

@@ -127,9 +127,14 @@ class SystemContextManager:
             System health metrics
         """
         try:
-            cpu = psutil.cpu_percent(interval=1)
+            import platform
+            
+            cpu = psutil.cpu_percent(interval=0.1)  # Reduced from 1s to 0.1s for faster response
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            
+            # Use platform-appropriate disk path
+            disk_path = 'C:\\' if platform.system() == 'Windows' else '/'
+            disk = psutil.disk_usage(disk_path)
             
             health = {
                 'cpu': {
@@ -160,7 +165,13 @@ class SystemContextManager:
         
         except Exception as e:
             logger.error(f"Failed to get system health: {e}")
-            return {'overall_status': 'unknown'}
+            # Return safe default structure
+            return {
+                'cpu': {'percent': 0.0, 'status': 'unknown'},
+                'memory': {'percent': 0.0, 'available_gb': 0.0, 'status': 'unknown'},
+                'disk': {'percent': 0.0, 'free_gb': 0.0, 'status': 'unknown'},
+                'overall_status': 'unknown'
+            }
     
     def get_resource_recommendations(self) -> List[str]:
         """

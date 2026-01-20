@@ -67,7 +67,12 @@ class VoiceService {
     this.recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       this.isListening = false;
-      onError?.(event.error);
+      const errorMessage = event.error === 'not-allowed' 
+        ? 'Microphone access denied. Please allow microphone permissions.'
+        : event.error === 'no-speech'
+        ? 'No speech detected. Please try again.'
+        : `Voice recognition error: ${event.error}`;
+      onError?.({ message: errorMessage, code: event.error });
     };
 
     this.recognition.onend = () => {
@@ -91,6 +96,17 @@ class VoiceService {
       this.recognition.stop();
       this.isListening = false;
     }
+  }
+
+  /**
+   * Check if voice features are available
+   */
+  isVoiceAvailable() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    return {
+      recognition: !!SpeechRecognition,
+      synthesis: !!window.speechSynthesis
+    };
   }
 
   /**

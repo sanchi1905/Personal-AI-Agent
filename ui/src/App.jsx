@@ -47,16 +47,24 @@ function App() {
   }
 
   const handleCommandGenerated = (command) => {
+    console.log('[App] Command generated:', command)
     setCurrentCommand(command)
   }
 
   const handleConfirm = async (dryRun = false) => {
-    if (!currentCommand) return
+    console.log('[App] handleConfirm called, dryRun:', dryRun, 'currentCommand:', currentCommand)
+    
+    if (!currentCommand) {
+      console.error('[App] No current command to execute')
+      return
+    }
     
     setShowConfirmation(false)
     
     try {
+      console.log('[App] Executing command:', currentCommand.command)
       const result = await api.executeCommand(currentCommand.command, dryRun)
+      console.log('[App] Execution result:', result)
       
       // Refresh system status after execution
       if (!dryRun && result.success) {
@@ -65,7 +73,7 @@ function App() {
       
       return result
     } catch (error) {
-      console.error('Execution failed:', error)
+      console.error('[App] Execution failed:', error)
       throw error
     }
   }

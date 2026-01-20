@@ -4,6 +4,11 @@ import { useState } from 'react'
 export default function CommandPreview({ command, onConfirm, onCancel }) {
   const [executing, setExecuting] = useState(false)
 
+  const handleConfirm = () => {
+    console.log('[CommandPreview] Confirm button clicked')
+    onConfirm()
+  }
+
   return (
     <div className="h-full flex flex-col p-6">
       <div className="flex items-center justify-between mb-4">
@@ -109,7 +114,7 @@ export default function CommandPreview({ command, onConfirm, onCancel }) {
       {/* Action Buttons */}
       <div className="mt-6 space-y-3">
         <button
-          onClick={onConfirm}
+          onClick={handleConfirm}
           disabled={executing}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
         >
