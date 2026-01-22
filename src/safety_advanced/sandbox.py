@@ -29,8 +29,38 @@ class CommandSandbox:
         r"takeown\s+/f.*\\windows",  # Take ownership of Windows files
         r"icacls.*\\windows.*\/grant",  # Modify Windows permissions
         r"reg\s+delete.*\\windows",  # Delete Windows registry keys
-        r"Remove-Item.*-Recurse.*C:\\Windows",  # Delete Windows folder
+        r"Remove-Item.*-Recurse.*C:\\\\Windows",  # Delete Windows folder
+        r"rm\s+-rf\s+/",  # Linux-style dangerous delete
+        r"del\s+/[fqs]\s+C:\\\\Windows",  # Delete Windows via cmd
+        r"rd\s+/s\s+/q.*C:\\\\Windows",  # Remove Windows directory
     ]
+    
+    # Safe read-only commands that are always allowed
+    SAFE_COMMANDS = {
+        'get-location',
+        'get-childitem',
+        'get-content',
+        'get-process',
+        'get-service',
+        'get-computerinfo',
+        'get-date',
+        'get-help',
+        'get-item',
+        'get-itemproperty',
+        'select-object',
+        'where-object',
+        'format-table',
+        'format-list',
+        'measure-object',
+        'sort-object',
+        'test-path',
+        'get-appxpackage',
+        'get-wmiobject',
+        'systeminfo',
+        'ipconfig',
+        'netstat',
+        'tasklist',
+    }
     
     # Commands that require explicit user approval
     HIGH_RISK_COMMANDS = {
@@ -78,30 +108,36 @@ class CommandSandbox:
         Returns:
             Validation result with status and details
         """
-        command_lower = command.lower()
+        command_lower = command.lower().strip()
+        
+        # Extract the first cmdlet/command name
+        first_word = command_lower.split()[0] if command_lower.split() else ""
+        
+        # Check if it's a known safe command
+        is_safe_cmd = any(safe_cmd in first_word for safe_cmd in self.SAFE_COMMANDS)
         
         # Check dangerous patterns
         for pattern in self.DANGEROUS_PATTERNS:
             if re.search(pattern, command_lower):
                 return {
                     'allowed': False,
-                    'reason': 'Matches dangerous pattern',
+                    'reason': 'Matches dangerous pattern - this command could cause severe system damage',
                     'risk_level': 'CRITICAL',
                     'pattern': pattern,
-                    'recommendation': 'This command could cause severe system damage'
+                    'recommendation': 'Command blocked for safety. Please verify your intent.'
                 }
         
         # Check protected paths
         for path in self.PROTECTED_PATHS:
             if path.lower() in command_lower:
                 # Check if it's a destructive operation
-                if any(word in command_lower for word in ['remove', 'delete', 'del ', 'rd ']):
+                if any(word in command_lower for word in ['remove', 'delete', 'del ', 'rd ', 'rm ']):
                     return {
                         'allowed': False,
-                        'reason': 'Targets protected system path',
+                        'reason': 'Targets protected system path with destructive operation',
                         'risk_level': 'CRITICAL',
                         'path': path,
-                        'recommendation': 'Do not modify system directories'
+                        'recommendation': 'Do not modify critical system directories'
                     }
         
         # Check custom denylist
@@ -125,11 +161,20 @@ class CommandSandbox:
                     'command': high_risk
                 }
         
-        # Command passes all checks
+        # If it's a known safe command, mark as low risk
+        if is_safe_cmd:
+            return {
+                'allowed': True,
+                'reason': 'Safe read-only command',
+                'risk_level': 'LOW'
+            }
+        
+        # Unknown command - medium risk by default
         return {
             'allowed': True,
-            'reason': 'Command passed all safety checks',
-            'risk_level': 'LOW'
+            'reason': 'Command passed safety checks but is not in safe list',
+            'risk_level': 'MEDIUM',
+            'recommendation': 'Review command carefully before executing'
         }
     
     def add_to_denylist(self, pattern: str) -> bool:

@@ -6,24 +6,32 @@ System Prompts - Predefined prompts for LLM interactions
 class SystemPrompts:
     """Collection of system prompts for different agent tasks"""
     
-    COMMAND_GENERATION = """You are a Windows PowerShell command assistant.
+    COMMAND_GENERATION = """You are an expert Windows PowerShell assistant. Generate precise, working PowerShell commands.
 
 User Request: {user_request}
 
-Generate a safe PowerShell command to accomplish this task.
+IMPORTANT RULES:
+1. Generate ONLY working PowerShell commands - test accuracy is critical
+2. Use full cmdlet names (Get-ChildItem, not dir or ls)
+3. NO backticks, NO quotes around the command, NO markdown formatting
+4. For file listings: Use Get-ChildItem with proper parameters
+5. For system info: Use Get-ComputerInfo, Get-Process, systeminfo
+6. For applications: Use Get-AppxPackage or Get-WmiObject Win32_Product
+7. Always include proper error handling flags like -ErrorAction SilentlyContinue when appropriate
 
-Respond in this format:
-Command: <the powershell command>
-Explanation: <what the command does>
-Risks: <any potential risks or side effects>
-Requires Admin: <yes/no>
+Examples:
+- "list files" → Command: Get-ChildItem -Path . | Format-Table Name, Length, LastWriteTime
+- "current directory" → Command: Get-Location
+- "installed apps" → Command: Get-AppxPackage -AllUsers | Select-Object Name, Version | Format-Table
+- "system info" → Command: Get-ComputerInfo | Select-Object WindowsVersion, OsArchitecture
 
-Rules:
-1. Only generate commands for safe, reversible operations
-2. Prefer built-in Windows commands over third-party tools
-3. If the request is unclear or dangerous, explain why you cannot help
-4. Be specific about what files/folders will be affected
-5. IMPORTANT: Do NOT wrap the command in backticks, quotes, or any markdown formatting
+Respond EXACTLY in this format:
+Command: <the exact PowerShell command with no formatting>
+Explanation: <brief description of what it does>
+Risks: <specific risks or 'No significant risks' if safe>
+Requires Admin: <yes or no>
+
+Be precise and accurate - the command will be executed directly.
 """
 
     SAFETY_CHECK = """You are a safety validator for system commands.

@@ -97,7 +97,6 @@ class LLMClient:
         Returns:
             Structured command data
         """
-        # Simple parsing - can be enhanced with JSON mode in future
         lines = response.strip().split('\n')
         
         result = {
@@ -107,17 +106,50 @@ class LLMClient:
             "requires_admin": False
         }
         
+        current_section = None
+        
         for line in lines:
-            if line.startswith("Command:"):
-                # Strip "Command:" prefix, whitespace, and any backticks
-                cmd = line.replace("Command:", "").strip()
-                result["command"] = cmd.strip('`').strip()
-            elif line.startswith("Explanation:"):
-                result["explanation"] = line.replace("Explanation:", "").strip()
-            elif line.startswith("Risks:"):
-                result["risks"] = [line.replace("Risks:", "").strip()]
-            elif "admin" in line.lower() or "administrator" in line.lower():
-                result["requires_admin"] = True
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Detect section headers
+            if line.lower().startswith("command:"):
+                current_section = "command"
+                cmd = line.split(":", 1)[1].strip()
+                # Remove any markdown code blocks or backticks
+                cmd = cmd.replace('```powershell', '').replace('```', '').strip('`').strip('"').strip("'").strip()
+                result["command"] = cmd
+            elif line.lower().startswith("explanation:"):
+                current_section = "explanation"
+                result["explanation"] = line.split(":", 1)[1].strip()
+            elif line.lower().startswith("risks:"):
+                current_section = "risks"
+                risk_text = line.split(":", 1)[1].strip()
+                if risk_text and risk_text.lower() != 'none':
+                    result["risks"].append(risk_text)
+            elif line.lower().startswith("requires admin:"):
+                current_section = "admin"
+                admin_text = line.split(":", 1)[1].strip().lower()
+                result["requires_admin"] = admin_text in ['yes', 'true', 'required']
+            # Continue multi-line sections
+            elif current_section == "explanation" and line:
+                result["explanation"] += " " + line
+            elif current_section == "risks" and line and not line.lower().startswith("requires"):
+                result["risks"].append(line)
+        
+        # Fallback: if no command found, try to extract it from code blocks
+        if not result["command"]:
+            import re
+            code_block = re.search(r'```(?:powershell)?\s*(.+?)```', response, re.DOTALL)
+            if code_block:
+                result["command"] = code_block.group(1).strip()
+            else:
+                # Last resort: assume first non-empty line is the command
+                for line in lines:
+                    if line.strip() and not line.strip().startswith('#'):
+                        result["command"] = line.strip().strip('`').strip()
+                        break
         
         return result
     

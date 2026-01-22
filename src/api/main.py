@@ -38,6 +38,7 @@ from src.memory_advanced.pattern_learner import PatternLearner
 from src.memory_advanced.smart_suggester import SmartSuggester
 from src.memory_advanced.context_manager import SystemContextManager
 from src.services.voice_service import ElevenLabsVoiceService
+from src.safety_advanced.command_validator import get_validator
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +216,25 @@ async def chat(message: ChatMessage) -> Dict[str, Any]:
             risks = []
             requires_admin = False
         
+        # Validate command syntax
+        validator = get_validator()
+        syntax_check = validator.validate_syntax(cmd_text)
+        
+        if not syntax_check.get('valid', True):
+            return {
+                "success": False,
+                "error": f"Invalid command syntax: {', '.join(syntax_check.get('errors', []))}",
+                "suggestions": syntax_check.get('suggestions', []),
+                "command": cmd_text
+            }
+        
+        # Add syntax warnings to risks
+        if 'warnings' in syntax_check:
+            risks.extend(syntax_check['warnings'])
+        
+        # Get improvement suggestions
+        improvements = validator.suggest_improvements(cmd_text)
+        
         # Safety validation
         validation_result = agent.sandbox.validate_command(cmd_text)
         is_safe = validation_result.get('allowed', True)
@@ -222,6 +242,9 @@ async def chat(message: ChatMessage) -> Dict[str, Any]:
         
         # Get optimization suggestions
         optimizations = agent.suggester.suggest_optimizations(cmd_text)
+        
+        # Combine all suggestions
+        all_suggestions = improvements + optimizations
         
         return {
             "success": True,
@@ -231,8 +254,12 @@ async def chat(message: ChatMessage) -> Dict[str, Any]:
             "is_safe": is_safe,
             "requires_admin": requires_admin,
             "suggestions": suggestions,
-            "optimizations": optimizations,
-            "context": context
+            "optimizations": all_suggestions[:5],  # Limit to top 5
+            "context": context,
+            "validation": {
+                "syntax_valid": syntax_check.get('valid', True),
+                "risk_level": validation_result.get('risk_level', 'UNKNOWN')
+            }
         }
     
     except Exception as e:
