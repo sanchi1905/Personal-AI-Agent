@@ -41,11 +41,14 @@ class SystemContextManager:
             SystemState snapshot
         """
         try:
+            import platform
+            disk_path = 'C:\\' if platform.system() == 'Windows' else '/'
+            
             state = SystemState(
                 timestamp=datetime.now().isoformat(),
                 cpu_percent=psutil.cpu_percent(interval=1),
                 memory_percent=psutil.virtual_memory().percent,
-                disk_usage_percent=psutil.disk_usage('/').percent,
+                disk_usage_percent=psutil.disk_usage(disk_path).percent,
                 running_processes=len(psutil.pids()),
                 active_services=0,  # Would need Windows-specific API
                 network_connections=len(psutil.net_connections())

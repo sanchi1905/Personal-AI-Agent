@@ -164,12 +164,23 @@ class SystemStatus(BaseModel):
 @app.on_event("startup")
 async def startup():
     """Initialize agent on startup"""
+    print("=== STARTUP EVENT STARTED ===")
+    logger.info("=== STARTUP EVENT STARTED ===")
     try:
+        print("About to initialize agent...")
+        logger.info("About to initialize agent...")
         await agent.initialize()
+        print("Agent initialized successfully")
         logger.info("Personal AI Agent API started successfully")
+        print("=== STARTUP EVENT COMPLETED ===")
     except Exception as e:
+        print(f"EXCEPTION IN STARTUP: {e}")
+        import traceback
+        traceback.print_exc()
         logger.error(f"Failed to initialize agent: {e}")
         logger.warning("Agent running with limited functionality")
+        # Don't re-raise the exception
+        print("=== STARTUP EVENT COMPLETED WITH ERROR ===")
 
 @app.get("/")
 async def root():
